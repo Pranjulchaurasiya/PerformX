@@ -10,11 +10,14 @@ if settings.DATABASE_URL.startswith("sqlite"):
         connect_args={"check_same_thread": False},
     )
 else:
+    # Supabase pooler (port 6543) requires pool_pre_ping and smaller pool
+    # pool_size=5 is safe for Render free tier + Supabase free tier limits
     engine = create_engine(
         settings.DATABASE_URL,
-        pool_size=10,
-        max_overflow=20,
+        pool_size=5,
+        max_overflow=10,
         pool_pre_ping=True,
+        pool_recycle=300,  # recycle connections every 5 min
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -28,3 +31,4 @@ def get_db():
         yield db
     finally:
         db.close()
+  
