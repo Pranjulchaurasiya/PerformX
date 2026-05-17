@@ -3,21 +3,24 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
+# Fix Supabase URLs that use "postgres://" — SQLAlchemy 2.x requires "postgresql://"
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
 # SQLite needs connect_args; Postgres uses pool settings
-if settings.DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
     engine = create_engine(
-        settings.DATABASE_URL,
+        db_url,
         connect_args={"check_same_thread": False},
     )
 else:
-    # Supabase pooler (port 6543) requires pool_pre_ping and smaller pool
-    # pool_size=5 is safe for Render free tier + Supabase free tier limits
     engine = create_engine(
-        settings.DATABASE_URL,
+        db_url,
         pool_size=5,
         max_overflow=10,
         pool_pre_ping=True,
-        pool_recycle=300,  # recycle connections every 5 min
+        pool_recycle=300,
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
