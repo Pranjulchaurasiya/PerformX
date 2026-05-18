@@ -72,34 +72,3 @@ app.include_router(escalations.router, prefix="/api")
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "PerformX API"}
-
-
-@app.post("/api/add-test-user")
-def add_test_user(secret: str):
-    """One-time endpoint to add test@performx.com. Remove after use."""
-    if secret != "performx-seed-2024":
-        from fastapi import HTTPException
-        raise HTTPException(status_code=403, detail="Forbidden")
-    from app.core.database import SessionLocal
-    from app.models.user import User, UserRole
-    from app.core.security import get_password_hash
-    db = SessionLocal()
-    try:
-        if db.query(User).filter(User.email == "test@performx.com").first():
-            return {"status": "already exists"}
-        manager = db.query(User).filter(User.email == "akshay@performx.com").first()
-        from app.models.department import Department
-        sales = db.query(Department).filter(Department.name == "Sales").first()
-        test_emp = User(
-            name="Test Employee",
-            email="test@performx.com",
-            hashed_password=get_password_hash("Employee@123"),
-            role=UserRole.employee,
-            department_id=sales.id,
-            manager_id=manager.id,
-        )
-        db.add(test_emp)
-        db.commit()
-        return {"status": "created", "email": "test@performx.com"}
-    finally:
-        db.close()
