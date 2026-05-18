@@ -14,21 +14,82 @@
 
 A modern, role-based goal management system built for organizations to replace spreadsheets with a structured digital workflow — from goal setting to quarterly progress tracking.
 
-<br/>
+### 🚀 [View Live Demo](https://perform-x-ivory.vercel.app)
 
-### [🚀 View Live Demo](https://performx.vercel.app)
+| | |
+|---|---|
+| **Frontend** | https://perform-x-ivory.vercel.app |
+| **Backend API** | https://performx-1.onrender.com |
+| **API Docs** | https://performx-1.onrender.com/docs |
 
 </div>
 
 ---
 
-## 📸 Screenshots
+## 🏗 Architecture
 
-> **Replace with actual screenshots before submission**
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                        USER'S BROWSER                           ║
+║                                                                  ║
+║   ┌─────────────┐  ┌──────────────────┐  ┌──────────────────┐  ║
+║   │  Employee   │  │     Manager      │  │   Admin / HR     │  ║
+║   │  Dashboard  │  │  Approvals +     │  │  Cycles, Users,  │  ║
+║   │  Goals      │  │  Team Analytics  │  │  Reports, Audit  │  ║
+║   └─────────────┘  └──────────────────┘  └──────────────────┘  ║
+║                                                                  ║
+║         React 18 + TypeScript + Vite + Tailwind CSS             ║
+║         Hosted on → Vercel (perform-x-ivory.vercel.app)         ║
+╚══════════════════════╦═══════════════════════════════════════════╝
+                       ║  HTTPS + JWT Token
+                       ║
+╔══════════════════════▼═══════════════════════════════════════════╗
+║                      BACKEND API                                ║
+║                                                                  ║
+║   FastAPI (Python)  ·  Hosted on Render                         ║
+║   performx-1.onrender.com                                        ║
+║                                                                  ║
+║   ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐  ║
+║   │  /goals  │ │/checkins │ │/analytics│ │ /admin /reports  │  ║
+║   └──────────┘ └──────────┘ └──────────┘ └──────────────────┘  ║
+║                                                                  ║
+║   Middleware: JWT Auth · Role-Based Access Control (RBAC)       ║
+║   Services:  Score Engine · Window Guard · Email Notifier       ║
+╚══════╦═══════════════════════════════════════╦════════════════════╝
+       ║                                       ║
+╔══════▼══════════════╗             ╔══════════▼═══════════════════╗
+║    DATABASE         ║             ║    BACKGROUND JOBS           ║
+║                     ║             ║                              ║
+║  PostgreSQL         ║             ║  Vercel Cron                 ║
+║  (Supabase)         ║             ║  Runs daily at 9 AM          ║
+║                     ║             ║  → checks overdue goals      ║
+║  12 tables          ║             ║  → sends escalation alerts   ║
+║  SQLAlchemy ORM     ║             ║  → notifies managers         ║
+║  Audit-ready        ║             ║                              ║
+╚═════════════════════╝             ╚══════════════════════════════╝
+```
 
-| Login Page | Employee Dashboard | Manager Approvals | Admin Analytics |
-|:---:|:---:|:---:|:---:|
-| *(screenshot)* | *(screenshot)* | *(screenshot)* | *(screenshot)* |
+### How a request flows
+
+```
+User clicks "Approve Goal"
+        │
+        ▼
+React sends  POST /api/goals/{id}/approve
+        │    with Authorization: Bearer <JWT>
+        ▼
+FastAPI checks JWT → extracts role → confirms role = manager
+        │
+        ▼
+Route handler updates goal status → LOCKED
+        │
+        ├── Writes to PostgreSQL (Supabase)
+        ├── Appends to audit_log table
+        └── Sends email notification to employee
+        │
+        ▼
+Returns 200 OK → React updates UI instantly
+```
 
 ---
 
@@ -36,19 +97,32 @@ A modern, role-based goal management system built for organizations to replace s
 
 | Feature | Description | Status |
 |---|---|:---:|
-| Goal Creation | Full form with thrust area, UoM type, target, and weightage | ✅ Complete |
-| Validation Engine | Max 8 goals, min 10% each, total must equal 100% | ✅ Complete |
-| Approval Workflow | Approve / Return for Rework / Reject with inline comments | ✅ Complete |
-| Goal Locking | Goals lock on approval — admin-only unlock with audit trail | ✅ Complete |
-| Check-in Windows | Enforced quarterly windows — DB-controlled open/close dates | ✅ Complete |
-| Progress Score Engine | All 4 UoM types: MIN, MAX, ZERO, TIMELINE (3-case) | ✅ Complete |
-| Shared Goals | Admin pushes KPIs to team — primary owner syncs achievement | ✅ Complete |
-| Audit Trail | Append-only log — who changed what and when | ✅ Complete |
-| CSV / Excel Export | Filterable achievement reports with all required columns | ✅ Complete |
-| Escalation Engine | Configurable rules + Vercel Cron daily checks | ✅ Bonus |
-| Email Notifications | All key events: submit, approve, return, unlock | ✅ Bonus |
-| Analytics Dashboard | QoQ trends, department heatmaps, manager effectiveness | ✅ Bonus |
-| Azure AD SSO | Microsoft Entra ID login + org hierarchy sync | ⚡ Bonus |
+| Goal Creation | Full form with thrust area, UoM type, target, and weightage | ✅ |
+| Validation Engine | Max 8 goals, min 10% each, total must equal 100% | ✅ |
+| Approval Workflow | Approve / Return for Rework with inline comments | ✅ |
+| Goal Locking | Goals lock on approval — admin-only unlock with audit trail | ✅ |
+| Check-in Windows | Enforced quarterly windows — DB-controlled open/close dates | ✅ |
+| Progress Score Engine | All 4 UoM types: MIN, MAX, ZERO, TIMELINE | ✅ |
+| Shared Goals | Admin pushes KPIs to team — primary owner syncs achievement | ✅ |
+| Audit Trail | Append-only log — who changed what and when | ✅ |
+| CSV / Excel Export | Filterable achievement reports | ✅ |
+| Escalation Engine | Vercel Cron daily checks + multi-level alerts | ✅ |
+| Email Notifications | Submit, approve, return, unlock events | ✅ |
+| Analytics Dashboard | QoQ trends, department heatmaps, manager effectiveness | ✅ |
+
+---
+
+## 🎭 Demo Accounts
+
+| Role | Email | Password |
+|---|---|---|
+| Admin / HR | pranul@performx.com | Admin@123 |
+| Manager (Sales) | akshay@performx.com | Manager@123 |
+| Manager (Engineering) | saandeep@performx.com | Manager@123 |
+| Employee | prince@performx.com | Employee@123 |
+| Employee | prachi@performx.com | Employee@123 |
+
+> Tip: The login page has demo buttons to auto-fill credentials.
 
 ---
 
@@ -57,75 +131,45 @@ A modern, role-based goal management system built for organizations to replace s
 | Layer | Technology |
 |---|---|
 | Frontend | React 18 + TypeScript + Vite |
-| Styling | Tailwind CSS + custom component library |
-| Backend | FastAPI (Python 3.13) |
+| Styling | Tailwind CSS |
+| Backend | FastAPI (Python 3.11) |
 | Database | PostgreSQL via Supabase |
 | ORM | SQLAlchemy 2.0 |
-| Auth | JWT (email + password) · Azure AD SSO ready |
+| Auth | JWT (email + password) |
 | Charts | Recharts |
 | Email | SMTP / Resend compatible |
-| Hosting | Vercel (frontend) + Render (backend) |
+| Frontend Hosting | Vercel |
+| Backend Hosting | Render |
 | Cron Jobs | Vercel Cron — daily escalation engine |
 | Cost | **$0 / month** |
 
 ---
 
-## 🎭 Demo Accounts
-
-> All accounts have pre-seeded data for immediate demo.
-> Run `python seed.py` to reset to clean demo state.
-
-| Role | Name | Email | Password |
-|---|---|---|---|
-| Admin / HR | Pranul Sharma | pranul@performx.com | Admin@123 |
-| Manager (Sales) | Akshay Verma | akshay@performx.com | Manager@123 |
-| Manager (Engineering) | Saandeep Gupta | saandeep@performx.com | Manager@123 |
-| Employee — Locked Goals | Prince Rajput | prince@performx.com | Employee@123 |
-| Employee — Returned Goals | Vinayak Mishra | vinayak@performx.com | Employee@123 |
-| Employee — Pending Approval | Anshul Tiwari | anshul@performx.com | Employee@123 |
-| Employee — Draft Goals | Sarthak Joshi | sarthak@performx.com | Employee@123 |
-| Employee — Engineering | Prachi Agarwal | prachi@performx.com | Employee@123 |
-
----
-
-## 🚀 Quick Start (Local Setup)
+## 🚀 Local Setup
 
 ### Prerequisites
 - Python 3.11+
 - Node.js 18+
-- Git
 
-### 1. Clone the repository
+### 1. Clone
 ```bash
-git clone https://github.com/[username]/performx.git
-cd performx
+git clone https://github.com/Pranjulchaurasiya/PerformX.git
+cd PerformX
 ```
 
-### 2. Backend setup
+### 2. Backend
 ```bash
 cd backend
 pip install -r requirements.txt
-```
-
-### 3. Set up environment variables
-```bash
 cp .env.example .env
-# Fill in: DATABASE_URL, SECRET_KEY, CRON_SECRET
-```
-
-### 4. Seed the database
-```bash
-python seed.py
-```
-
-### 5. Start the backend
-```bash
+# Edit .env — set DATABASE_URL and SECRET_KEY
+python seed.py          # populate demo data
 uvicorn app.main:app --reload --port 8000
-# API → http://localhost:8000
+# API  → http://localhost:8000
 # Docs → http://localhost:8000/docs
 ```
 
-### 6. Frontend setup (new terminal)
+### 3. Frontend
 ```bash
 cd frontend
 npm install
@@ -137,135 +181,76 @@ npm run dev
 
 ## 🔐 Environment Variables
 
+### Backend (Render)
+
 | Variable | Required | Description |
 |---|:---:|---|
-| `DATABASE_URL` | ✅ | PostgreSQL connection string (Supabase or local) |
-| `SECRET_KEY` | ✅ | JWT signing key — min 32 characters |
-| `ALGORITHM` | ✅ | JWT algorithm — use `HS256` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | ✅ | Token TTL — recommended `480` |
-| `APP_BASE_URL` | ✅ | Frontend URL for CORS and email deep-links |
-| `CRON_SECRET` | ✅ | Protects the Vercel Cron escalation endpoint |
-| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | ⚡ | Email notifications (falls back to console log) |
-| `AZURE_CLIENT_ID` | ⚡ | Azure AD SSO — bonus feature |
-| `AZURE_CLIENT_SECRET` | ⚡ | Azure AD SSO — bonus feature |
-| `AZURE_TENANT_ID` | ⚡ | Azure AD SSO — bonus feature |
-| `TEAMS_WEBHOOK_URL` | ⚡ | Microsoft Teams notifications — bonus feature |
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `SECRET_KEY` | ✅ | JWT signing key (min 32 chars) |
+| `ALGORITHM` | ✅ | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | ✅ | `480` (8 hours) |
+| `APP_BASE_URL` | ✅ | Frontend URL for CORS — update if URL changes |
+| `CRON_SECRET` | ✅ | Protects the escalation cron endpoint |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | ⚡ | Email notifications |
 
-> Generate `SECRET_KEY` and `CRON_SECRET` with:
-> ```bash
-> python -c "import secrets; print(secrets.token_hex(32))"
-> ```
+> If you change the frontend URL, update `APP_BASE_URL` in Render → Environment.
 
----
+### Frontend (Vercel)
 
-## 🏗 Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│                   CLIENT LAYER                      │
-│   Employee Dashboard | Manager View | Admin / HR    │
-│          React 18 + TypeScript + Vite               │
-│             Tailwind CSS + Recharts                 │
-└──────────────────────┬──────────────────────────────┘
-                       │ HTTPS
-┌──────────────────────▼──────────────────────────────┐
-│                    API LAYER                        │
-│              FastAPI (Python 3.13)                  │
-│   /goals  /achievements  /checkins  /analytics      │
-│   /reports  /audit  /admin  /escalations            │
-│         Middleware: JWT Auth + RBAC                 │
-└──────────┬──────────────────────┬───────────────────┘
-           │                      │
-┌──────────▼──────────┐  ┌────────▼────────────────────┐
-│    AUTH SERVICE     │  │        DATA LAYER            │
-│  JWT (email/pass)   │  │  SQLAlchemy ORM              │
-│  Azure AD SSO ready │  │  PostgreSQL (Supabase)       │
-│                     │  │  12 tables · audit-ready     │
-└─────────────────────┘  └─────────────────────────────┘
-                                    │
-┌───────────────────────────────────▼─────────────────┐
-│              BACKGROUND SERVICES                    │
-│  Vercel Cron (0 9 * * *) → /api/cron/escalations   │
-│  SMTP / Resend → Email notifications                │
-└─────────────────────────────────────────────────────┘
-
-  Deployment: Vercel (frontend) + Render (backend) + Supabase (DB)
-  Infrastructure cost: $0 / month
-```
+| Variable | Required | Description |
+|---|:---:|---|
+| `VITE_API_URL` | ✅ | Backend URL e.g. `https://performx-1.onrender.com` |
 
 ---
 
 ## 👥 User Roles
 
 ### 🧑‍💼 Employee
-- Create and manage personal goal sheets with up to 8 goals
-- Submit goals for manager approval once total weightage = 100%
-- Edit returned goals and resubmit with changes highlighted
+- Create up to 8 goals (total weightage must = 100%)
+- Submit goals for manager approval
+- Edit returned goals and resubmit
 - Log quarterly actuals during open check-in windows
-- View locked goals, tracking scores, and progress history
+- View tracking scores and progress history
 
-### 👔 Manager (L1)
-- View all pending approvals from direct reports
-- Approve, return for rework, or reject goal sheets with comments
+### 👔 Manager
+- Review and approve / return goal sheets with comments
 - Edit target and weightage inline before approving
-- Add structured quarterly check-in comments per employee
-- View team analytics — QoQ trends, goal status breakdown, completion rates
-- Monitor escalation alerts for their team on the dashboard
+- Add quarterly check-in comments per employee
+- View team analytics and escalation alerts
 
 ### 🛡 Admin / HR
-- Configure goal-setting and quarterly check-in cycles with open/close dates
-- Set per-cycle late completion penalty for Timeline goals (0–20% per day)
-- Push shared departmental KPIs to multiple employees at once
-- Unlock locked goals with mandatory reason — fully audit-logged
-- Export achievement reports as CSV or Excel with filters
-- View full audit trail — every status change, unlock, and resubmission
-- Manage org hierarchy — users, departments, thrust areas
-- View org-wide analytics — department heatmaps, manager effectiveness table
+- Configure goal-setting and check-in cycles
+- Push shared KPIs to multiple employees
+- Unlock locked goals (audit-logged)
+- Export achievement reports (CSV / Excel)
+- View full audit trail and org-wide analytics
 
 ---
 
 ## 📊 Scoring Engine
 
-The system computes a **Tracking Score** (not a rating) for each goal based on its Unit of Measurement:
-
-| UoM Type | Formula | Example |
+| UoM Type | Formula | Use Case |
 |---|---|---|
 | **MIN** — higher is better | `Actual ÷ Target × 100` | Sales revenue |
 | **MAX** — lower is better | `Target ÷ Actual × 100` | Response time, cost |
 | **ZERO** — zero = success | `0 → 100%, else 0%` | Safety incidents |
 | **TIMELINE** — on time | `100%` | Completed before deadline |
-| **TIMELINE** — in progress | `Elapsed days ÷ Total days × 100` | Partial completion |
-| **TIMELINE** — completed late | `100 − (days late × penalty %)` | Configurable per cycle |
+| **TIMELINE** — in progress | `Elapsed ÷ Total days × 100` | Partial completion |
+| **TIMELINE** — completed late | `100 − (days late × penalty%)` | Configurable per cycle |
 
 ---
 
 ## 🔄 Goal Status Flow
 
 ```
-DRAFT ──► SUBMITTED ──────────────────────────────► LOCKED
-               │                                       │
-               └──► RETURNED ──► RESUBMITTED ──► LOCKED
-                        ▲
-               Employee edits and resubmits
+  Employee          Manager            Admin
+     │                 │                 │
+  Creates           Reviews           Can unlock
+  DRAFT ──► SUBMITTED ──► LOCKED ◄────────┘
+               │
+               ▼
+           RETURNED ──► (employee edits) ──► RESUBMITTED ──► LOCKED
 ```
-
-| Status | Editable By | Next Action |
-|---|---|---|
-| `DRAFT` | Employee | Submit for approval |
-| `SUBMITTED` | Manager (inline) | Approve or Return |
-| `RETURNED` | Employee | Revise and Resubmit |
-| `RESUBMITTED` | Manager (inline) | Approve or Return |
-| `LOCKED` | Admin only (unlock) | Log quarterly achievements |
-
----
-
-## 🔒 Security Notes
-
-- All API endpoints require a valid JWT token
-- Role-based access enforced at the route handler level via dependency injection
-- `GET /admin/cycles` is intentionally readable by all authenticated roles — employees need cycle window dates for the dashboard banner. All write operations are Admin-only.
-- Audit log is append-only — no update or delete endpoints exist
-- Goal unlock requires a mandatory reason and is always audit-logged
 
 ---
 
@@ -276,52 +261,32 @@ PerformX/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py              ← FastAPI entry point + CORS
-│   │   ├── core/                ← Config, DB engine, JWT deps
-│   │   ├── models/              ← SQLAlchemy ORM models (12 tables)
-│   │   ├── schemas/             ← Pydantic request/response schemas
-│   │   ├── routers/             ← API route handlers (10 routers)
+│   │   ├── core/                ← Config, DB engine, JWT
+│   │   ├── models/              ← 12 SQLAlchemy ORM models
+│   │   ├── schemas/             ← Pydantic request/response
+│   │   ├── routers/             ← 10 API route handlers
 │   │   └── services/
-│   │       ├── score_engine.py  ← 4-UoM tracking score computation
-│   │       ├── email_service.py ← SMTP email notifications
+│   │       ├── score_engine.py  ← Tracking score computation
+│   │       ├── email_service.py ← Email notifications
 │   │       └── window_guard.py  ← Check-in window enforcement
-│   ├── seed.py                  ← Demo data (12 users, rich states)
-│   ├── .env.example             ← Environment variable template
+│   ├── seed.py                  ← Demo data seeder
+│   ├── .env.example
 │   └── requirements.txt
 │
 ├── frontend/
 │   └── src/
 │       ├── pages/
 │       │   ├── employee/        ← Dashboard, Goals, Achievements
-│       │   ├── manager/         ← Dashboard, Approvals, Team, Analytics
-│       │   └── admin/           ← Users, Cycles, Reports, Audit, Analytics
-│       ├── layouts/             ← Role-specific sidebars with nav
-│       ├── components/          ← Shared UI (badges, modals, charts)
-│       ├── context/             ← Auth context + JWT storage
-│       └── api/client.ts        ← Axios instance + JWT interceptor
+│       │   ├── manager/         ← Dashboard, Approvals, Team
+│       │   └── admin/           ← Users, Cycles, Reports, Audit
+│       ├── layouts/             ← Role-specific sidebars
+│       ├── components/          ← Shared UI components
+│       ├── context/             ← Auth context + JWT
+│       └── api/client.ts        ← Axios + JWT interceptor
 │
-├── vercel.json                  ← Cron job schedule (daily 9 AM)
-├── WORKING_FLOW.md              ← Full user journey documentation
-└── README.md
+├── vercel.json                  ← Cron schedule + SPA routing
+└── WORKING_FLOW.md              ← Full user journey docs
 ```
-
----
-
-## 🏆 Hackathon Submission
-
-**Event:** AtomQuest Hackathon 1.0
-**Problem Statement:** In-House Goal Setting & Tracking Portal
-**Team:** PerformX
-
-### Evaluation Criteria Coverage
-
-| Criteria | Implementation |
-|---|---|
-| ✅ Functionality | End-to-end flow: create → approve → check-in → report |
-| ✅ BRD Adherence | All Phase 1 & Phase 2 requirements implemented |
-| ✅ User Friendliness | Role-based UI, inline validation, helpful error messages |
-| ✅ Bug-Free | Validation at both frontend and backend layers |
-| ✅ Bonus Features | Escalation engine, analytics, email notifications |
-| ✅ Cost Optimisation | $0/month — Vercel + Render + Supabase free tiers |
 
 ---
 
