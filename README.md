@@ -128,12 +128,10 @@ Back to employee → Achievements page
 
 ## 🏗 Architecture
 
-```
 ![Architecture](./performx_architecture_diagram.svg)
 
   Deployment: Vercel (frontend) + Render (backend) + Supabase (DB)
   Infrastructure cost: $0 / month
-```
 
 ### How a request flows
 
