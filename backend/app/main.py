@@ -72,3 +72,21 @@ app.include_router(escalations.router, prefix="/api")
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "PerformX API"}
+
+
+@app.post("/api/seed-db")
+def seed_database(secret: str, db=None):
+    """One-time seed endpoint. Remove after use."""
+    if secret != "performx-seed-2024":
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Forbidden")
+    import subprocess, sys
+    result = subprocess.run(
+        [sys.executable, "seed.py"],
+        capture_output=True, text=True, cwd="/opt/render/project/src"
+    )
+    return {
+        "stdout": result.stdout[-3000:] if result.stdout else "",
+        "stderr": result.stderr[-1000:] if result.stderr else "",
+        "returncode": result.returncode
+    }
