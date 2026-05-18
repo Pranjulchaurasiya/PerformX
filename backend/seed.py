@@ -172,6 +172,18 @@ def seed():
     db.add_all([prachi, priyanshoo, nidhi, prashant])
     db.flush()
 
+    # ── Test Employee (Fresh — zero goals) ────────────────────────────────────
+    test_emp = User(
+        name="Test Employee",
+        email="test@performx.com",
+        hashed_password=get_password_hash("Employee@123"),
+        role=UserRole.employee,
+        department_id=sales.id,
+        manager_id=akshay.id,
+    )
+    db.add(test_emp)
+    db.flush()
+
     # ── Goal Cycles ───────────────────────────────────────────────────────────
     today = date.today()
     year  = today.year
@@ -431,6 +443,7 @@ def seed():
     print("    vinayak@performx.com     / Employee@123  — 3 returned for rework")
     print("    abhishek@performx.com    / Employee@123  — 4 locked goals")
     print("    sarthak@performx.com     / Employee@123  — 2 draft goals")
+    print("    test@performx.com        / Employee@123  — fresh account, zero goals")
     print()
     print("  Employees (Engineering — under Saandeep):")
     print("    prachi@performx.com      / Employee@123  — 4 locked goals, Q1 actuals done")

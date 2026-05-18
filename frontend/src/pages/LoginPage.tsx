@@ -77,10 +77,11 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="grid grid-cols-3 gap-2 mt-2">
               {[
                 { label: 'Mgr — Engineering', e: 'saandeep@performx.com', p: 'Manager@123' },
                 { label: 'Emp — Returned',    e: 'vinayak@performx.com',  p: 'Employee@123' },
+                { label: 'Emp — Fresh',       e: 'test@performx.com',     p: 'Employee@123' },
               ].map(d => (
                 <button key={d.label} type="button" onClick={() => fillDemo(d.e, d.p)}
                   className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors">
