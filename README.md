@@ -129,8 +129,7 @@ Back to employee → Achievements page
 ## 🏗 Architecture
 
 ```
-<img width="1272" height="1160" alt="image" src="https://github.com/user-attachments/assets/3170c557-732a-4b89-9704-11b327e5309e" />
-
+![Architecture](./performx_architecture_diagram.svg)
 
   Deployment: Vercel (frontend) + Render (backend) + Supabase (DB)
   Infrastructure cost: $0 / month
