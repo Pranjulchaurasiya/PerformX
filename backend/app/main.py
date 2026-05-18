@@ -75,17 +75,20 @@ def health_check():
 
 
 @app.post("/api/seed-db")
-def seed_database(secret: str, db=None):
+def seed_database(secret: str):
     """One-time seed endpoint. Remove after use."""
     if secret != "performx-seed-2024":
         from fastapi import HTTPException
         raise HTTPException(status_code=403, detail="Forbidden")
-    import subprocess, sys
+    import subprocess, sys, os
+    # Find the correct working directory
+    cwd = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     result = subprocess.run(
         [sys.executable, "seed.py"],
-        capture_output=True, text=True, cwd="/opt/render/project/src"
+        capture_output=True, text=True, cwd=cwd
     )
     return {
+        "cwd": cwd,
         "stdout": result.stdout[-3000:] if result.stdout else "",
         "stderr": result.stderr[-1000:] if result.stderr else "",
         "returncode": result.returncode
