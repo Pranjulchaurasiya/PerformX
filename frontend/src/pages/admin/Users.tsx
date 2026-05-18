@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Plus, Edit2 } from 'lucide-react'
+import { Plus, Edit2, RotateCcw } from 'lucide-react'
 import api from '../../api/client'
 import toast from 'react-hot-toast'
 import type { User } from '../../types'
 import Modal from '../../components/Modal'
 import { PageSpinner } from '../../components/Spinner'
+import { useAuth } from '../../context/AuthContext'
 
 interface Dept { id: number; name: string }
 
 export default function AdminUsers() {
+  const { user: currentUser } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [depts, setDepts] = useState<Dept[]>([])
   const [loading, setLoading] = useState(true)
@@ -16,6 +18,10 @@ export default function AdminUsers() {
   const [editing, setEditing] = useState<User | null>(null)
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'employee', department_id: '', manager_id: '' })
   const [saving, setSaving] = useState(false)
+
+  // Reset goals state
+  const [resetTarget, setResetTarget] = useState<User | null>(null)
+  const [resetting, setResetting] = useState(false)
 
   const load = () => {
     Promise.all([api.get('/admin/users?page_size=100'), api.get('/admin/departments')])
@@ -38,6 +44,19 @@ export default function AdminUsers() {
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Save failed')
     } finally { setSaving(false) }
+  }
+
+  const handleReset = async () => {
+    if (!resetTarget) return
+    setResetting(true)
+    try {
+      await api.delete(`/admin/users/${resetTarget.id}/reset`)
+      toast.success(`${resetTarget.name}'s goals have been reset`)
+      setResetTarget(null)
+      load()
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Reset failed')
+    } finally { setResetting(false) }
   }
 
   if (loading) return <PageSpinner />
@@ -67,15 +86,34 @@ export default function AdminUsers() {
               <tr key={u.id} className="hover:bg-gray-50">
                 <td className="px-5 py-3 font-medium">{u.name}</td>
                 <td className="px-5 py-3 text-gray-500">{u.email}</td>
-                <td className="px-5 py-3"><span className={`badge ${u.role === 'admin' ? 'bg-red-100 text-red-700' : u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>{u.role}</span></td>
+                <td className="px-5 py-3">
+                  <span className={`badge ${u.role === 'admin' ? 'bg-red-100 text-red-700' : u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                    {u.role}
+                  </span>
+                </td>
                 <td className="px-5 py-3 text-gray-500">{depts.find(d => d.id === u.department_id)?.name || '—'}</td>
-                <td className="px-5 py-3"><button onClick={() => openEdit(u)} className="text-primary-600 hover:underline flex items-center gap-1"><Edit2 size={13} /> Edit</button></td>
+                <td className="px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => openEdit(u)} className="text-primary-600 hover:underline flex items-center gap-1">
+                      <Edit2 size={13} /> Edit
+                    </button>
+                    {u.role === 'employee' && (
+                      <button
+                        onClick={() => setResetTarget(u)}
+                        className="text-red-500 hover:text-red-700 hover:underline flex items-center gap-1"
+                      >
+                        <RotateCcw size={13} /> Reset Goals
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
+      {/* Add / Edit User Modal */}
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Edit User' : 'Add User'}>
         <div className="space-y-4">
           <div><label className="label">Name *</label><input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
@@ -105,6 +143,32 @@ export default function AdminUsers() {
             <button onClick={() => setModal(false)} className="btn-secondary">Cancel</button>
           </div>
         </div>
+      </Modal>
+
+      {/* Reset Goals Confirmation Modal */}
+      <Modal open={!!resetTarget} onClose={() => setResetTarget(null)} title="Reset Goals">
+        {resetTarget && (
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800">
+              <p className="font-semibold mb-1">⚠️ This action cannot be undone.</p>
+              <p>
+                This will permanently delete all goals, goal sheets, and achievements for{' '}
+                <span className="font-semibold">{resetTarget.name}</span>.
+              </p>
+              <p className="mt-1">The user account will remain intact.</p>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={handleReset}
+                disabled={resetting}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg disabled:opacity-50"
+              >
+                {resetting ? 'Resetting…' : 'Yes, Reset Goals'}
+              </button>
+              <button onClick={() => setResetTarget(null)} className="btn-secondary">Cancel</button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   )

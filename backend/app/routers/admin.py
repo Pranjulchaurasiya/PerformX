@@ -5,10 +5,14 @@ from typing import List, Optional
 from app.core.database import get_db
 from app.core.deps import require_admin, get_current_user
 from app.core.security import get_password_hash
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.department import Department
 from app.models.thrust_area import ThrustArea
 from app.models.goal_cycle import GoalCycle
+from app.models.goal import Goal
+from app.models.achievement import Achievement
+from app.models.checkin import Checkin
+from app.models.audit_log import AuditLog
 from app.schemas.admin import (
     UserCreate, UserUpdate, UserOut,
     DepartmentCreate, DepartmentOut,
@@ -73,6 +77,41 @@ def update_user(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.delete("/users/{user_id}/reset", status_code=status.HTTP_200_OK)
+def reset_user_goals(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """Delete all goals, achievements, checkins and audit logs for an employee.
+    The user account itself is preserved. Admin cannot reset their own account."""
+    if current_user.id == user_id:
+        raise HTTPException(status_code=400, detail="You cannot reset your own account")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.role != UserRole.employee:
+        raise HTTPException(status_code=400, detail="Only employee accounts can be reset")
+
+    # Collect all goal IDs for this user
+    goal_ids = [g.id for g in db.query(Goal.id).filter(Goal.employee_id == user_id).all()]
+
+    if goal_ids:
+        # 1. Delete achievements linked to this user's goals
+        db.query(Achievement).filter(Achievement.goal_id.in_(goal_ids)).delete(synchronize_session=False)
+        # 2. Delete audit logs linked to this user's goals
+        db.query(AuditLog).filter(AuditLog.goal_id.in_(goal_ids)).delete(synchronize_session=False)
+        # 3. Delete goals themselves (shared_links cascade via ORM)
+        db.query(Goal).filter(Goal.employee_id == user_id).delete(synchronize_session=False)
+
+    # 4. Delete checkins where this user is the employee
+    db.query(Checkin).filter(Checkin.employee_id == user_id).delete(synchronize_session=False)
+
+    db.commit()
+    return {"message": f"{user.name}'s goals have been reset"}
 
 
 # ---- Departments ----
